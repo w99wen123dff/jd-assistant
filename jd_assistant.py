@@ -45,7 +45,7 @@ class Assistant(object):
         self.fp = global_config.get('config', 'fp')
         self.track_id = global_config.get('config', 'track_id')
         self.risk_control = global_config.get('config', 'risk_control')
-        if not self.eid or not self.fp or not self.track_id or not self.risk_control:
+        if not self.eid or not self.fp or not self.track_id:
             raise AsstException('请在 config.ini 中配置 eid, fp, track_id, risk_control 参数，具体请参考 wiki-常见问题')
 
         self.timeout = float(global_config.get('config', 'timeout') or DEFAULT_TIMEOUT)
