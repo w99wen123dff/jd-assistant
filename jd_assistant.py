@@ -62,6 +62,7 @@ class Assistant(object):
         self.username = ''
         self.nick_name = ''
         self.is_login = False
+        self.timers = Timer()
         self.sess = requests.session()
         try:
             self._load_cookies()
@@ -1369,7 +1370,7 @@ class Assistant(object):
             logger.info('执行结束，提交订单失败！')
 
     @check_login
-    def buy_item_in_stock(self, sku_ids, area, wait_all=False, stock_interval=3, submit_retry=3, submit_interval=5):
+    def buy_item_in_stock(self, sku_ids, area, wait_all=False, stock_interval=3, submit_retry=3, submit_interval=5, timerMode=False):
         """根据库存自动下单商品
         :param sku_ids: 商品id。可以设置多个商品，也可以带数量，如：'1234' 或 '1234,5678' 或 '1234:2' 或 '1234:2,5678:3'
         :param area: 地区id
@@ -1382,6 +1383,9 @@ class Assistant(object):
         items_dict = parse_sku_id(sku_ids)
         items_list = list(items_dict.keys())
         area_id = parse_area_id(area=area)
+        
+        if timerMode:
+            self.timers.start()
 
         if not wait_all:
             logger.info('下单模式：%s 任一商品有货并且未下架均会尝试下单', items_list)
