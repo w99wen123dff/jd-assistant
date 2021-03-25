@@ -637,6 +637,7 @@ class Assistant(object):
         headers = {
             'User-Agent': self.user_agent,
             'referer': 'https://item.jd.com/',
+            'Host': 'cart.jd.com',
         }
 
         for sku_id, count in parse_sku_id(sku_ids=sku_ids).items():
@@ -656,31 +657,6 @@ class Assistant(object):
                 logger.info('%s x %s 已成功加入购物车', sku_id, count)
             else:
                 logger.error('%s 添加到购物车失败', sku_id)
-    @check_login
-    def add_item_to_cart_2(self, sku_ids):
-        """添加商品到购物车
-
-        重要：
-        1.商品添加到购物车后将会自动被勾选✓中。
-        2.在提交订单时会对勾选的商品进行结算。
-        3.部分商品（如预售、下架等）无法添加到购物车
-
-        京东购物车可容纳的最大商品种数约为118-120种，超过数量会加入购物车失败。
-
-        :param sku_ids: 商品id，格式："123" 或 "123,456" 或 "123:1,456:2"。若不配置数量，默认为1个。
-        :return:
-        """
-        
-
-        for sku_id, count in parse_sku_id(sku_ids=sku_ids).items():
-            data = {}
-            url = 'https://cart.jd.com/tproduct?' + 'pid={0}&rid={1}'.format(sku_id, random.random())
-            resp = self.sess.post(url=url, data=data)
-            result = True
-            if not response_status(resp):
-                logger.info('add_item_to_cart_2 完成')
-            else: 
-                logger.info('add_item_to_cart_2 错误')
 
     @check_login
     def clear_cart(self):
@@ -817,8 +793,7 @@ class Assistant(object):
             )
         else:
             logger.info('%s 不在购物车中，开始加入购物车，数量 %s', sku_id, count)
-            self.add_item_to_cart(sku_ids={sku_id: count}) 
-            return self.add_item_to_cart_2(sku_ids={sku_id: count})
+            return self.add_item_to_cart(sku_ids={sku_id: count}) 
 
     @check_login
     def get_checkout_page_detail(self):
@@ -917,8 +892,26 @@ class Assistant(object):
         }
         self.sess.post(url=url, data=data, headers=headers)
 
+    def request_coupon_page(self, preorder=True):
+        """访问优惠券页面
+        :param preorder: 是否是预售商品
+        :return:
+        """
+        url = 'https://trade.jd.com/shopping/dynamic/coupon/getCoupons.action'
+        # tmp='1'
+        # if preorder:
+        #     tmp='0'
+        data = {
+            'preorder': 1,
+        }
+        headers = {
+            'X-Requested-With':'XMLHttpRequest'
+        }
+        self.sess.post(url=url, data=data, headers=headers)
+
+
     @check_login
-    def submit_order(self):
+    def submit_order(self, preorder=True):
         """提交订单
 
         重要：
@@ -927,7 +920,9 @@ class Assistant(object):
 
         :return: True/False 订单提交结果
         """
-        url = 'https://trade.jd.com/shopping/order/submitOrder.action?&presaleStockSign=1'
+        url = 'https://trade.jd.com/shopping/order/submitOrder.action'
+        if preorder:
+            url+'?&presaleStockSign=1'
         # js function of submit order is included in https://trade.jd.com/shopping/misc/js/order.js?r=2018070403091
 
         data = {
@@ -953,6 +948,7 @@ class Assistant(object):
             'User-Agent': self.user_agent,
             'Host': 'trade.jd.com',
             'Referer': 'http://trade.jd.com/shopping/order/getOrderInfo.action',
+            'X-Requested-With': 'XMLHttpRequest',
         }
 
         try:
@@ -1000,7 +996,7 @@ class Assistant(object):
         """
         for i in range(1, retry + 1):
             logger.info('第[%s/%s]次尝试提交订单', i, retry)
-            self.get_checkout_page_detail()
+            self.request_coupon_page()
             if self.submit_order():
                 logger.info('第%s次提交订单成功', i)
                 return True
@@ -1028,6 +1024,7 @@ class Assistant(object):
 
         for count in range(1, retry + 1):
             logger.info('第[%s/%s]次尝试提交订单', count, retry)
+            self.request_coupon_page()
             if self.submit_order():
                 break
             logger.info('休息%ss', interval)
@@ -1385,11 +1382,12 @@ class Assistant(object):
         t.start()
 
         self.add_item_to_cart(sku_ids={sku_id: num})
-        self.get_checkout_page_detail()
         for count in range(1, retry + 1):
             logger.info('第[%s/%s]次尝试提交订单', count, retry)
+            self.request_coupon_page()
             if self.submit_order():
                 break
+            self.get_checkout_page_detail()
             logger.info('休息%ss', interval)
             time.sleep(interval)
         else:
