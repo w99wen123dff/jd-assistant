@@ -5675,6 +5675,8 @@ seajs.use([
               }
               //NOTE: 
               // 提交loading
+              console.log("param=" + JSON.stringify(param));
+              console.log("actionUrl=" + actionUrl)
               $('body').append("<div id='submit_loading' class='purchase-loading'><div class='loading-cont'></div></div>");
               jQuery.ajax({
                 type : "POST",
@@ -5688,6 +5690,7 @@ seajs.use([
                     goToLogin();
                     return;
                   }
+                  console.log("result=" + JSON.stringify(result))
                   if (result.hasJxj) {
                       var ycDialog = $('body').dialog({
                            title: null,
@@ -5712,7 +5715,8 @@ seajs.use([
                     if (enterPriseUser == 1 || accountVerify=='true') {
                         successUrl = OrderAppConfig.Protocol +"order.jd.com/center/list.action";
                         // 等待拆单，定时450毫秒
-                        window.setTimeout('window.location.href=successUrl+"?rd="+Math.random();', 450);
+                        console.log("window jump 1:" + successUrl+"?rd="+Math.random())
+                        // window.setTimeout('window.location.href=successUrl+"?rd="+Math.random();', 450);
                         return;
                     }
                     // 跳订单中心列表
@@ -5725,7 +5729,8 @@ seajs.use([
                         $('#direct_pay input[name=key]').val(result.payInfo.key);
                         $('#direct_pay input[name=countdownTime]').val(result.payInfo.countdownTime);
                         $('#direct_pay input[name=orderSubmitTime]').val(result.payInfo.orderSubmitTime);
-                         window.setTimeout("$('#direct_pay').submit();",450);
+                        console.log("window jump 2: 跳订单中心列表")
+                        //  window.setTimeout("$('#direct_pay').submit();",450);
     
                         return;
                     }
@@ -5737,13 +5742,15 @@ seajs.use([
                         var reqInfoForOverSeas = result.reqInfo;
                         var signForOverSeas = result.sign;
                         realUrl = payUrlForOverSeas + "orderId=" + orderIdForOverSeas + "&reqInfo=" + reqInfoForOverSeas + "&sign=" + signForOverSeas;
-                        window.setTimeout('window.location.href=realUrl;', 450);
+                        console.log("window jump 3:" + realUrl)
+                        // window.setTimeout('window.location.href=realUrl;', 450);
                         return;
                     }
                     if (result.goJumpOrderCenter) {
                       successUrl = OrderAppConfig.Protocol +"order.jd.com/center/list.action";
+                      console.log("window jump 4:" + successUrl+"?rd="+Math.random())
                       // 等待拆单，定时450毫秒
-                      window.setTimeout('window.location.href=successUrl+"?rd="+Math.random();', 450);
+                      // window.setTimeout('window.location.href=successUrl+"?rd="+Math.random();', 450);
                       return;
     
                     } else {
@@ -5764,7 +5771,8 @@ seajs.use([
                       if(result.orderType){
                     	  successUrl = successUrl +"&orderType="+result.orderType;
                       }
-                      window.location.href = successUrl + "&rid=" + Math.random();
+                      console.log("window jump 5:" + successUrl+"?rid="+Math.random())
+                      // window.location.href = successUrl + "&rid=" + Math.random();
                       return;
                     }
     
@@ -5808,7 +5816,8 @@ seajs.use([
                   if((flowType == "" || flowType == 10) && resultCode != 600159){
                     doOutSku(outSkus, resultCode,result.addressVO, cartEmpty);
                   }else{
-                    window.location.href = cartUrl + '?outSkus=' + outSkus + '&rid=' + Math.random();
+                    console.log("window jump 6:" + cartUrl + '?outSkus=' + outSkus + '&rid=' + Math.random())
+                    // window.location.href = cartUrl + '?outSkus=' + outSkus + '&rid=' + Math.random();
                     return;
                   }
                 }

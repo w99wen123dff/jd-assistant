@@ -1394,7 +1394,7 @@ class Assistant(object):
             logger.info('执行结束，提交订单失败！')
 
     @check_login
-    def buy_item_in_stock(self, sku_ids, area, wait_all=False, stock_interval=3, submit_retry=3, submit_interval=5, timerMode=False):
+    def buy_item_in_stock(self, sku_ids, area, submit_retry=3, submit_interval=3, timerMode=False):
         """根据库存自动下单商品
         :param sku_ids: 商品id。可以设置多个商品，也可以带数量，如：'1234' 或 '1234,5678' 或 '1234:2' 或 '1234:2,5678:3'
         :param area: 地区id
@@ -1411,33 +1411,11 @@ class Assistant(object):
         if timerMode:
             self.timers.start()
 
-        if not wait_all:
-            logger.info('下单模式：%s 任一商品有货并且未下架均会尝试下单', items_list)
-            # while True:
-            for (sku_id, count) in items_dict.items():
-                if not self.if_item_can_be_ordered(sku_ids={sku_id: count}, area=area_id):
-                    logger.info('%s 不满足下单条件，%ss后进行下一次查询', sku_id, stock_interval)
-                else:
-                    logger.info('%s 满足下单条件，开始执行', sku_id)
-                    self._cancel_select_all_cart_item()
-                    self._add_or_change_cart_item(self.get_cart_detail(), sku_id, count)
-                    if self.submit_order_with_retry(submit_retry, submit_interval + random.randint(0, 300) / 1000):
-                        return
-
-                    # time.sleep(stock_interval)
-        else:
-            logger.info('下单模式：%s 所有都商品同时有货并且未下架才会尝试下单', items_list)
-            # while True:
-            if not self.if_item_can_be_ordered(sku_ids=sku_ids, area=area_id):
-                logger.info('%s 不满足下单条件，%ss后进行下一次查询', items_list, stock_interval + random.randint(0, 1000) / 1000)
-            else:
-                logger.info('%s 满足下单条件，开始执行', items_list)
-                self._cancel_select_all_cart_item()
-                shopping_cart = self.get_cart_detail()
-                for (sku_id, count) in items_dict.items():
-                    self._add_or_change_cart_item(shopping_cart, sku_id, count)
-
-                if self.submit_order_with_retry(submit_retry, submit_interval + random.randint(0, 1000) / 1000):
-                    return
-
-                # time.sleep(stock_interval)
+        logger.info('下单模式：%s 任一商品有货并且未下架均会尝试下单', items_list)
+        # while True:
+        for (sku_id, count) in items_dict.items():
+            logger.info('%s 满足下单条件，开始执行', sku_id)
+            self._cancel_select_all_cart_item()
+            self._add_or_change_cart_item(self.get_cart_detail(), sku_id, count)
+            if self.submit_order_with_retry(submit_retry, submit_interval):
+                return
